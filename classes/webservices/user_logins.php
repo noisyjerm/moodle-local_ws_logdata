@@ -42,8 +42,8 @@ require_once($CFG->libdir . '/externallib.php');
  */
 class user_logins extends \external_api {
 
-    CONST PAGESIZE = 10000;
-    CONST DAYS = 5;
+    const PAGESIZE = 10000;
+    const DAYS = 5;
 
     /**
      * Validate incoming parameters.
@@ -52,7 +52,7 @@ class user_logins extends \external_api {
     public static function get_user_logins_parameters() {
         return new \external_function_parameters(
             array(
-                'days' => new \external_value(PARAM_INT, 'The number of days to look back', VALUE_DEFAULT, user_logins::DAYS),
+                'days' => new \external_value(PARAM_INT, 'The number of days to look back', VALUE_DEFAULT, self::DAYS),
                 'pagesize' => new \external_value(PARAM_INT, 'The max number of results', VALUE_DEFAULT, 0),
                 'page' => new \external_value(PARAM_INT, 'Page number of set', VALUE_DEFAULT, 1),
             )
@@ -80,9 +80,9 @@ class user_logins extends \external_api {
         // Use last pagination size if none specified.
         if (!$pagesize) {
             $lastpagesize = get_config('local_ws_logdata', 'pagesize');
-            $pagesize = $lastpagesize >= 1 ? $lastpagesize : user_logins::PAGESIZE;
+            $pagesize = $lastpagesize >= 1 ? $lastpagesize : self::PAGESIZE;
         }
-        $offset = $pagesize * ($page-1);
+        $offset = $pagesize * ($page - 1);
 
         $sql = "SELECT id,
         userid,
