@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 // The individual capabilities.
-$capabilities = 'moodle/user:viewuseractivitiesreport';
+$capabilities = 'report/log:view';
 
 // We defined the web service functions to install.
 $functions = [
@@ -38,5 +38,15 @@ $functions = [
         'capabilities'  => $capabilities,
         'type'          => 'read'
     ],
+];
 
+// We define the services to install as pre-built services. This is not editable by administrator.
+$services = [
+    'Log data export webservice' => [
+        'functions'         => [
+            'local_ws_logdata_userlogins',
+        ],
+        'restrictedusers'   => 1,
+        'enabled'           => 1,
+    ]
 ];

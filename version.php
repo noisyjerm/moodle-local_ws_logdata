@@ -30,8 +30,8 @@ $plugin->requires = 2022041900;
 
 // Plugin details.
 $plugin->component  = 'local_ws_logdata';
-$plugin->version    = 2023090402;   // Plugin created September 2023.
-$plugin->release    = 'v4.0';
+$plugin->version    = 2023090403;   // Plugin created September 2023.
+$plugin->release    = 'v4.0.1';
 
 // Plugin status details.
-$plugin->maturity = MATURITY_ALPHA;   // ALPHaA, BETA, RC, STABLE.
+$plugin->maturity = MATURITY_RC;   // ALPHA, BETA, RC, STABLE.

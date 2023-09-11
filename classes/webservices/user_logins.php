@@ -42,20 +42,32 @@ require_once($CFG->libdir . '/externallib.php');
  */
 class user_logins extends \external_api {
 
+    CONST PAGESIZE = 10000;
+    CONST DAYS = 5;
+
+    /**
+     * Validate incoming parameters.
+     * @return \external_function_parameters
+     */
     public static function get_user_logins_parameters() {
         return new \external_function_parameters(
             array(
-                'days' => new \external_value(PARAM_INT, 'The number of days to look back', VALUE_DEFAULT, 5),
+                'days' => new \external_value(PARAM_INT, 'The number of days to look back', VALUE_DEFAULT, user_logins::DAYS),
+                'pagesize' => new \external_value(PARAM_INT, 'The max number of results', VALUE_DEFAULT, 0),
+                'page' => new \external_value(PARAM_INT, 'Page number of set', VALUE_DEFAULT, 1),
             )
         );
     }
 
     /**
-     * Send bulk email to specified users.
-     *
+     * Get user login data from the standard logstore.
+     * @param int $days The number of days looking back from now that we want data for.
+     * @param int $pagesize The max number of results.
+     * @param int $page Page number of set.
      * @return array
+     * @throws \dml_exception
      */
-    public static function get_user_logins($days): array {
+    public static function get_user_logins($days, $pagesize, $page): array {
         global $DB;
         // The logstore_standard_log table can be really big.
         // So we save the ID of the first record in our subset so subsequent calls are faster.
@@ -65,6 +77,12 @@ class user_logins extends \external_api {
         if ($days <= $lastdays) {
             $startid = get_config('local_ws_logdata', 'startid');
         }
+        // Use last pagination size if none specified.
+        if (!$pagesize) {
+            $lastpagesize = get_config('local_ws_logdata', 'pagesize');
+            $pagesize = $lastpagesize >= 1 ? $lastpagesize : user_logins::PAGESIZE;
+        }
+        $offset = $pagesize * ($page-1);
 
         $sql = "SELECT id,
         userid,
@@ -75,15 +93,18 @@ class user_logins extends \external_api {
         target
         from {logstore_standard_log}
         WHERE action = ?
-        AND timecreated > ?
+        AND timecreated >= ?
         AND id >= ?
         ORDER BY timecreated ASC";
 
-        $records = $DB->get_records_sql($sql, ['loggedin', $xdaysago, $startid]);
+        $records = $DB->get_records_sql($sql, ['loggedin', $xdaysago, $startid], $offset, $pagesize);
 
         // Save the last request info.
         set_config('days', $days, 'local_ws_logdata');
-        set_config('startid', array_key_first($records), 'local_ws_logdata');
+        set_config('pagesize', $pagesize, 'local_ws_logdata');
+        if ($page == 1) {
+            set_config('startid', array_key_first($records), 'local_ws_logdata');
+        }
 
         // Do the date parsing in PHP to be DB agnostic.
         foreach ($records as $record) {
@@ -94,6 +115,10 @@ class user_logins extends \external_api {
         return ['logins' => array_values($records)];
     }
 
+    /**
+     * Describe the returned data structure.
+     * @return external_single_structure
+     */
     public static function get_user_logins_returns() {
         $logins = new external_single_structure(
             array(
